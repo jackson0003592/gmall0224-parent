@@ -10,6 +10,7 @@ import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
@@ -36,9 +37,9 @@ public class UniqueVisitorApp {
         DataStreamSource<String> kafkaDS = env.addSource(kafkaSource);
 
         SingleOutputStreamOperator<JSONObject> jsonObjDS = kafkaDS.map(JSON::parseObject);
-        jsonObjDS.print();
+        KeyedStream<JSONObject, String> keyedDS = jsonObjDS.keyBy(j -> j.getJSONObject("common").getString("mid"));
 
-        SingleOutputStreamOperator<JSONObject> filterDS = jsonObjDS.filter(new RichFilterFunction<JSONObject>() {
+        SingleOutputStreamOperator<JSONObject> filterDS = keyedDS.filter(new RichFilterFunction<JSONObject>() {
 
             private ValueState<String> lastVisitDateState;
             private SimpleDateFormat sdf;

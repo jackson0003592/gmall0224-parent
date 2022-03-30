@@ -51,25 +51,25 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         //从状态中获取配置信息
         TableProcess tableProcess = broadcastState.get(key);
 
-        if(tableProcess != null){
+        if (tableProcess != null) {
             //在配置表中找到了该操作对应的配置  判断是事实数据还是维度数据
             String sinkTable = tableProcess.getSinkTable();
-            jsonObj.put("sink_table",sinkTable);
+            jsonObj.put("sink_table", sinkTable);
 
             //在向下游传递数据之前 ，将不需要的字段过滤掉   过滤思路：从配置表中读取保留字段，根据保留字段，对data中的属性进行过滤。
             JSONObject dataJsonObj = jsonObj.getJSONObject("data");
 
-            filterColumns(dataJsonObj,tableProcess.getSinkColumns());
+            filterColumns(dataJsonObj, tableProcess.getSinkColumns());
 
             String sinkType = tableProcess.getSinkType();
-            if(sinkType.equals(TableProcess.SINK_TYPE_HBASE)){
+            if (sinkType.equals(TableProcess.SINK_TYPE_HBASE)) {
                 //维度数据   放到维度侧输出流汇总
-                ctx.output(dimTag,jsonObj);
-            }else if(sinkType.equals(TableProcess.SINK_TYPE_KAFKA)){
+                ctx.output(dimTag, jsonObj);
+            } else if (sinkType.equals(TableProcess.SINK_TYPE_KAFKA)) {
                 //事实数据  放到主流中
                 out.collect(jsonObj);
             }
-        }else{
+        } else {
             //在配置表中没有该操作对应的配置
             System.out.println("No this Key in TableProcess:" + key);
         }
@@ -77,14 +77,14 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
     }
 
     //过滤字段
-    private void filterColumns(JSONObject dataJsonObj, String sinkColumns) {
+    private static void filterColumns(JSONObject dataJsonObj, String sinkColumns) {
         //dataJsonObj   :   {"tm_name":"aaa","logo_url":"aa","id":12}
         //sinkColumns   :   id,tm_name
         String[] columnArr = sinkColumns.split(",");
         List<String> columnList = Arrays.asList(columnArr);
 
         Set<Map.Entry<String, Object>> entrySet = dataJsonObj.entrySet();
-        entrySet.removeIf(entry->!columnList.contains(entry.getKey()));
+        entrySet.removeIf(entry -> !columnList.contains(entry.getKey()));
     }
 
     //处理广播流中数据      FlinkCDC从MySQL中读取配置信息
@@ -113,38 +113,38 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         String sinkExtend = tableProcess.getSinkExtend();
 
         //如果说 读取到的配置信息是维度配置的话，那么提前将维度表创建出来
-        if(sinkType.equals(TableProcess.SINK_TYPE_HBASE)&&"insert".equals(operateType)){
-            checkTable(sinkTable,sinkPk,sinkColumns,sinkExtend);
+        if (sinkType.equals(TableProcess.SINK_TYPE_HBASE) && "insert".equals(operateType)) {
+            checkTable(sinkTable, sinkPk, sinkColumns, sinkExtend);
         }
 
         //拼接key
         String key = sourceTable + ":" + operateType;
         //将配置信息放到状态中
-        broadcastState.put(key,tableProcess);
+        broadcastState.put(key, tableProcess);
     }
 
     //在处理配置数据的时候    提前建立维度表  create table if not exists 表空间.表名(字段名 数据类型,字段名 数据类型);
     private void checkTable(String tableName, String pk, String fields, String ext) throws SQLException {
         //对主键进行空值处理
-        if(pk == null){
+        if (pk == null) {
             pk = "id";
         }
         //对建表扩展进行空值处理
-        if(ext == null){
+        if (ext == null) {
             ext = "";
         }
-        StringBuilder createSql = new StringBuilder("create table if not exists "+ GmallConfig.HBASE_SCHEMA+"."+tableName+"(");
+        StringBuilder createSql = new StringBuilder("create table if not exists " + GmallConfig.HBASE_SCHEMA + "." + tableName + "(");
 
         String[] fieldsArr = fields.split(",");
         for (int i = 0; i < fieldsArr.length; i++) {
             String field = fieldsArr[i];
             //判断是否为主键
-            if(field.equals(pk)){
+            if (field.equals(pk)) {
                 createSql.append(field + " varchar primary key ");
-            }else{
+            } else {
                 createSql.append(field + " varchar ");
             }
-            if(i < fieldsArr.length - 1){
+            if (i < fieldsArr.length - 1) {
                 createSql.append(",");
             }
         }
@@ -160,9 +160,9 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("在Phoenix中建表失败");
-        }finally {
+        } finally {
             //释放资源
-            if(ps != null){
+            if (ps != null) {
                 ps.close();
             }
         }

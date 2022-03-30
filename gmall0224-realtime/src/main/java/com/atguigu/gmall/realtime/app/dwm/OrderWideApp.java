@@ -29,7 +29,7 @@ public class OrderWideApp {
 
         String orderInfoSourceTopic = "dwd_order_info";
         String orderDetailSourceTopic = "dwd_order_detail";
-        String groupId = "order_wide_app_group";
+        String groupId = "order_wide_app_group1";
 
         FlinkKafkaConsumer<String> orderInfoKafkaSource = MyKafkaUtil.getKafkaSource(orderInfoSourceTopic, groupId);
         FlinkKafkaConsumer<String> orderDetailKafkaSource = MyKafkaUtil.getKafkaSource(orderDetailSourceTopic, groupId);
@@ -51,6 +51,7 @@ public class OrderWideApp {
                 orderInfo.setCreate_ts(sdf.parse(orderInfo.getCreate_time()).getTime());
                 return orderInfo;
             }
+
         });
 
         SingleOutputStreamOperator<OrderDetail> orderDetailDS = orderDetailStrDS.map(new RichMapFunction<String, OrderDetail>() {
@@ -100,7 +101,7 @@ public class OrderWideApp {
                     }
                 });
 
-        orderWideDS.print(">>>>>");
+        orderWideDS.print(">>-------------->>>");
 
         env.execute();
     }

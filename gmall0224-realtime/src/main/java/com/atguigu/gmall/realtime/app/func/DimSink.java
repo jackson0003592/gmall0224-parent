@@ -34,41 +34,42 @@ public class DimSink extends RichSinkFunction<JSONObject> {
         JSONObject dataJsonObj = jsonObj.getJSONObject("data");
 
         //拼接插入语句   upsert into 表空间.表 (a,b,c) values(xx,xx,xx);
-        String upsertSql = genUpsertSql(tableName,dataJsonObj);
+        String upsertSql = genUpsertSql(tableName, dataJsonObj);
 
         System.out.println("向Phoenix维度表中插入数据的SQL:" + upsertSql);
 
         PreparedStatement ps = null;
-            try {
-                //创建数据库操作对象
-                ps = conn.prepareStatement(upsertSql);
-                //执行SQL
-                ps.executeUpdate();
-                //注意：Phoenix的连接实现类不是自动提交事务，需要手动提交
-                conn.commit();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                throw new RuntimeException("向Phoenix维度表中插入数据失败");
-            } finally {
+        try {
+            //创建数据库操作对象
+            ps = conn.prepareStatement(upsertSql);
+            //执行SQL
+            ps.executeUpdate();
+            //注意：Phoenix的连接实现类不是自动提交事务，需要手动提交
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("向Phoenix维度表中插入数据失败");
+        } finally {
             //释放资源
-            if(ps != null){
+            if (ps != null) {
                 ps.close();
             }
         }
         //如果当前维度数据做的是删除或者修改操作
-        if(jsonObj.getString("type").equals("update")||jsonObj.getString("type").equals("delete")){
+        if (jsonObj.getString("type").equals("update") || jsonObj.getString("type").equals("delete")) {
             //那么清空Redis中缓存的维度数据
-            DimUtil.deleteCached(tableName,dataJsonObj.getString("id"));
+            DimUtil.deleteCached(tableName, dataJsonObj.getString("id"));
         }
 
     }
+
     //拼接插入语句
     private String genUpsertSql(String tableName, JSONObject dataJsonObj) {
         //id ... 100
         //tm_name ... zs
-        String upsertSql = "upsert into "+GmallConfig.HBASE_SCHEMA+"."+tableName
-            +" ("+ StringUtils.join(dataJsonObj.keySet(), ",") +") " +
-            " values('"+StringUtils.join(dataJsonObj.values(),"','")+"')";
+        String upsertSql = "upsert into " + GmallConfig.HBASE_SCHEMA + "." + tableName
+                + " (" + StringUtils.join(dataJsonObj.keySet(), ",") + ") " +
+                " values('" + StringUtils.join(dataJsonObj.values(), "','") + "')";
         return upsertSql;
     }
 }

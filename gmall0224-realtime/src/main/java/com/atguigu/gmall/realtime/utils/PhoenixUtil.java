@@ -37,7 +37,7 @@ public class PhoenixUtil {
             while (rs.next()){
                 T obj = clz.newInstance();
                 for (int i=1; i<= md.getColumnCount(); i++){
-                    String columnName = md.getColumnClassName(i);
+                    String columnName = md.getColumnName(i);
                     Object columnValue = rs.getObject(i);
                     BeanUtils.setProperty(obj, columnName, columnValue);
                 }

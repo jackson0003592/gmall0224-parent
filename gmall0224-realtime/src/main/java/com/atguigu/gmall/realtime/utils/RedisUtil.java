@@ -23,6 +23,11 @@ public class RedisUtil {
         jedisPoolConfig.setMaxWaitMillis(2000);
         jedisPoolConfig.setMaxIdle(5);
         jedisPoolConfig.setMinIdle(5);
-        jedisPool = new JedisPool(jedisPoolConfig, "node1", 6379, 10000);
+        jedisPool = new JedisPool(jedisPoolConfig, "node4", 6379, 10000);
+    }
+
+    public static void main(String[] args) {
+        Jedis jedis = getJedis();
+        System.out.println(jedis.ping());
     }
 }

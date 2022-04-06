@@ -118,8 +118,8 @@ public class DimUtil {
     }
 
     public static void main(String[] args) {
-        JSONObject dimInfo = DimUtil.getDimInfoNoCache("dim_base_trademark", Tuple2.of("ID", "12"));
-        //JSONObject dimInfo = DimUtil.getDimInfo("dim_base_trademark", Tuple2.of("ID", "12"));
+//        JSONObject dimInfo = DimUtil.getDimInfoNoCache("dim_base_trademark", Tuple2.of("ID", "12"));
+        JSONObject dimInfo = DimUtil.getDimInfo("dim_base_trademark", Tuple2.of("ID", "12"));
 //        JSONObject dimInfo = DimUtil.getDimInfo("dim_base_trademark", "12");
         System.out.println(dimInfo);
     }
